@@ -7,7 +7,37 @@
 # @Blog    : https://www.hecady.com
 import requests
 import re
-from biliBVencode import BiliBv
+
+table = 'fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF'
+tr = {}
+for i in range(58):
+    tr[table[i]] = i
+s = [11, 10, 3, 8, 4, 6]
+xor = 177451812
+add = 8728348608
+
+
+class BiliBv:
+
+    # BV转AV
+    @staticmethod
+    def bv2av(x):
+        if len(x) == 11:
+            x = "BV1" + x[2:]
+        r = 0
+        for i in range(6):
+            r += tr[x[s[i]]] * 58 ** i
+        return (r - add) ^ xor
+
+    # AV转BV
+    @staticmethod
+    def av2bv(x):
+        y = int(x)
+        y = (y ^ xor) + add
+        r = list('BV1  4 1 7  ')
+        for i in range(6):
+            r[s[i]] = table[y // 58 ** i % 58]
+        return ''.join(r)
 
 
 class BilibiliCover(BiliBv):
@@ -131,13 +161,11 @@ class BilibiliCover(BiliBv):
         """
         video_id = self.get_video_id()
         if not isinstance(video_id, dict):
-            for id_type, api in self.api.items():
-                if self.id_type == id_type:
-                    response = requests.get(api + video_id)
-                    if response.json()['code'] == 0:
-                        return response.json()
-                    if response.json()['code'] == -400 or -404:
-                        return {'code': -400, 'message': '获取封面失败'}
+            api = self.api.get(self.id_type)
+            response = requests.get(api + video_id)
+            error_codes = {-400, -404}
+            if response.json()['code'] == 0:
+                return response
+            if response.json()['code'] in error_codes:
+                return {'code': -400, 'message': '获取封面失败'}
         return video_id
-
-
