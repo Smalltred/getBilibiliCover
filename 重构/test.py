@@ -13,6 +13,7 @@ import time
 bv_url_file = open("bv_url.text", 'r', encoding='utf-8').readlines()
 bv_id_file = open("bv_id.text", 'r', encoding='utf-8').readlines()
 ep_url_file = open("ep_url.text", "r", encoding='utf-8').readlines()
+url_file = open("url.text", "r", encoding='utf-8').readlines()
 
 
 def timer(func):
@@ -36,10 +37,11 @@ def regexEp(string):
 def test_get_api():
     for i in ep_url_file:
         test = BilibiliCover(i)
-        print(test.getVideoId())
+        print(test.cover())
         print('--------------------------')
 
 
 if __name__ == '__main__':
     test_get_api()
+    # 直接把分析结果打印到控制台
     pass

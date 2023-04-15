@@ -66,11 +66,11 @@ class BilibiliCover(BiliBv):
     }
 
     video_id_type = None
+    video_id = None
 
     def __init__(self, string: str) -> None:
         super().__init__()
         self.string: str = string
-        print(string)
         self.api_response: dict = {}
 
     def getVideoId(self):
@@ -179,6 +179,7 @@ class BilibiliCover(BiliBv):
         video_id = self.getVideoId()
         try:
             if video_id not in self.__errors:
+                self.video_id = video_id
                 api = self.__apis.get(self.video_id_type)
                 response = requests.get(api + video_id).json()
                 if response['code'] == 0:
@@ -191,7 +192,7 @@ class BilibiliCover(BiliBv):
         handle_dict = {
             "bv": self.__handleBvResponse,
             "av": self.__handleBvResponse,
-            "ep": self.__handleEpResponse,
+            "ep": self.__handleEpPvResponse,
             "ss": self.__handleSsResponse,
             'md': self.__handleMdResponse,
         }
@@ -224,6 +225,8 @@ class BilibiliCover(BiliBv):
         result = {
             key: convert_aid(key, video_data.get(key)) for key in video_key
         }
+        video_type = {"is_multi_video": 0, "video_count": 1, "video_type": self.video_id_type}
+        result = {**result, **video_type}
         result["url"] = self.__url + result["bvid"]
         return result
 
@@ -238,7 +241,7 @@ class BilibiliCover(BiliBv):
             video_info = {key: video.get("arc").get(key) for key in video_key}
             video_info["bvid"] = video.get("bvid")
             video_info['aid'] = "av" + str(video_info['aid'])
-            video_info["url"] = url + video.get("bvid")
+            video_info["url.text"] = url + video.get("bvid")
             return video_info
 
         multi_video_result = [extract_video_info(video) for video in multi_video_data]
@@ -247,20 +250,53 @@ class BilibiliCover(BiliBv):
             "current_title": current_bvid_result.get('title'),
             "current_bvid": current_bvid_result.get('bvid'),
             "current_avid": current_bvid_result.get('aid'),
-            "current_url": current_bvid_result.get("url"),
+            "current_url": current_bvid_result.get("url.text"),
             "current_pic": current_bvid_result.get("pic"),
             "video_type": video_type,
             "data": multi_video_result
         }
         return result
 
-    def __handleEpResponse(self):
-        return self.api_response
+    def __handleEpPvResponse(self):
+        is_pv_ep = "pv"
+        url = self.__url
+        video_key = {"share_copy", "cover", "bvid", "aid"}
+
+        def handleEpResponse(video_data):
+            video_info = {}
+            for video_data_key in video_data:
+                if video_data_key.get("id") == int(self.video_id):
+                    video_info = {key: video_data_key.get(key) for key in video_key}
+            video_info["url"] = url + video_info["bvid"]
+            video_type = {"is_multi_video": 0, "video_count": 1, "video_type": self.video_id_type, "ep_type": "ep"}
+            result = {**video_info, **video_type}
+            return result
+
+        def handlePvResponse(video_data):
+            video_info = {}
+            for video_data_key in video_data:
+                if video_data_key.get("id") == int(self.video_id):
+                    video_info = {key: video_data_key.get(key) for key in video_key}
+            video_info["url"] = url + video_info["bvid"]
+            video_type = {"is_multi_video": 0, "video_count": 1, "video_type": self.video_id_type, "ep_type": "pv"}
+            result = {**video_info, **video_type}
+            return result
+
+        response = self.api_response
+        if response.get("result"):
+            video_result = response.get("result")
+            ep_video_result = video_result.get("episodes")
+            pv_video_result = video_result.get("section")[0].get("episodes")
+            for ep_video_result_key in ep_video_result:
+                if ep_video_result_key.get("id") == int(self.video_id):
+                    is_pv_ep = "ep"
+                    break
+            if is_pv_ep == "ep":
+                return handleEpResponse(ep_video_result)
+            else:
+                return handlePvResponse(pv_video_result)
 
     def __handleMdResponse(self):
-        return self.api_response
-
-    def __handlePvResponse(self):
         return self.api_response
 
     def __handleSsResponse(self):
