@@ -5,31 +5,14 @@
 # @FileName: test.py
 # @Software: PyCharm
 # @Blog    : https://www.hecady.com
+import re
+
 from bilibiliCover import BilibiliCover
 import time
 
-test_url_ls = [
-    '【《三体》 第15话 永恒的篝火-哔哩哔哩国创】https://b23.tv/ep705756',
-    'https://www.bilibili.com/video/BV1S24y1w7rU/',
-    'https://b23.tv/ep705756',
-    'https://b23.tv/ep705756',
-    'https://b23.tv/ep705756',
-    'https://b23.tv/hMwMJ70',
-    'https://www.bilibili.com/video/av1564'
-]
-
-test_str_ls = [
-    'ss40156',
-    'ep705756',
-    'hMwMJ70',
-    'av1564asd',
-    'ss40156ads',
-    'ep705756sad',
-    'hMwMJ70asd',
-    'av1564asdasd',
-    'BV1advsqsxad'
-
-]
+bv_url_file = open("bv_url.text", 'r', encoding='utf-8').readlines()
+bv_id_file = open("bv_id.text", 'r', encoding='utf-8').readlines()
+ep_url_file = open("ep_url.text", "r", encoding='utf-8').readlines()
 
 
 def timer(func):
@@ -42,27 +25,21 @@ def timer(func):
     return wrapper
 
 
-def test_url():
-    for i in test_url_ls:
-        test = BilibiliCover(i)
-        print(test.get_bili_url())
+def regexEp(string):
+    regex = re.compile(r"(ep.*?)\d+", re.I)
+    ep_id = regex.search(string)
+    if ep_id:
+        return ep_id.group(0)[2:]
 
 
 @timer
-def test_get_url_id():
-    for i in test_url_ls:
+def test_get_api():
+    for i in ep_url_file:
         test = BilibiliCover(i)
-        print(test.get_video_id())
-
-
-@timer
-def test_get_str_id():
-    for i in test_str_ls:
-        test = BilibiliCover(i)
-        print(test.get_video_id())
+        print(test.getVideoId())
+        print('--------------------------')
 
 
 if __name__ == '__main__':
-    test_get_url_id()
-    print('--------------------------')
-    test_get_str_id()
+    test_get_api()
+    pass
