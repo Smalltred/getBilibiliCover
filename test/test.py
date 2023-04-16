@@ -27,20 +27,19 @@ def timer(func):
 
 
 @timer
-def test_get():
-    for i in md_file:
-        test = BilibiliCover(i)
+def test_get(str):
+        test = BilibiliCover(str)
         print(test.cover())
         print('--------------------------')
 
 
 @timer
 def test_all():
-    # for i in bv_file:
-    #     test = BilibiliCover(i)
-    #     print(test.cover())
-    #     print(test.video_id)
-    #     print('--------------------------')
+    for i in bv_file:
+        test = BilibiliCover(i)
+        print(test.cover())
+        print(test.video_id)
+        print('--------------------------')
     # for i in av_file:
     #     test = BilibiliCover(i)
     #     print(test.cover())
@@ -55,13 +54,13 @@ def test_all():
     #     test = BilibiliCover(i)
     #     print(test.cover())
     #     print('--------------------------')
-    for i in md_file:
-        test = BilibiliCover(i)
-        print(test.cover())
-        print(test.video_id)
-        print('--------------------------')
+    # for i in md_file:
+    #     test = BilibiliCover(i)
+    #     print(test.cover())
+    #     print(test.video_id)
+    #     print('--------------------------')
 
 
 if __name__ == '__main__':
-    # test_get()
-    test_all()
+    test_get("https://i2.hdslb.com/bfs/archive/79b6933cbc49ffe3c853e4ce42eb1e25f6223311.jpg@672w_378h_1c_!web-home-common-cover.avif")
+    # test_all()

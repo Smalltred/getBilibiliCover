@@ -116,15 +116,16 @@ class BilibiliCover(BiliBv):
         4.判断是否为b23.tv重定向后的真实地址
         :return: https://www.bilibili.com/video/BV1S24y1w7rU/ or self.string
         """
-        result = None
         url = re.search(r"[a-zA-z]+://[^\s]*", self.string)
         if url:
             b23_pattern = r'https?://b23\.tv/[\w-]+'
             bilibili_pattern = r'https?://www\.bilibili\.com/[\w-]+'
             if re.match(b23_pattern, url.group(0)):
                 result = self.__redirectUrl(url.group(0))
-            if re.match(bilibili_pattern, url.group(0)):
+            elif re.match(bilibili_pattern, url.group(0)):
                 result = url.group(0)
+            else:
+                result = self.string
         else:
             result = self.string
         return result
@@ -337,9 +338,9 @@ class BilibiliCover(BiliBv):
             poster_video_info = {poster_key_map.get(key, key): video_response.get(key) for key in poster_video_key}
             video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
             result = {
-                    **poster_video_info,
-                    "video_type_info": video_type_info
-                }
+                **poster_video_info,
+                "video_type_info": video_type_info
+            }
             if handleEpResult(ep_video_result):
                 result["eps"] = handleEpResult(ep_video_result)
                 result["video_type_info"]["states"] = 1
