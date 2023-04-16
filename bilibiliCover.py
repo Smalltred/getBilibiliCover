@@ -66,12 +66,12 @@ class BilibiliCover(BiliBv):
     }
 
     video_id_type = None
-    video_id = None
 
     def __init__(self, string: str) -> None:
         super().__init__()
         self.string: str = string
         self.api_response: dict = {}
+        self.video_id = None
 
     def getVideoId(self):
         """
@@ -219,56 +219,72 @@ class BilibiliCover(BiliBv):
     def __handleBvSingleResponse(self, video_data) -> dict:
         video_key = {"title", "pic", "bvid", "aid"}
 
-        def convert_aid(key, value):
-            return ("av" + str(value)) if key == "aid" else value
+        # 创建键名映射关系字典
+        key_map = {"aid": "avid", "pic": "cover"}
 
-        result = {
-            key: convert_aid(key, video_data.get(key)) for key in video_key
-        }
-        video_type = {"is_multi_video": 0, "video_count": 1, "video_type": self.video_id_type}
-        result = {**result, **video_type}
-        result["url"] = self.__url + result["bvid"]
+        # 创建新字典，用新键名从旧字典中复制旧键的值
+        result = {key_map.get(key, key): video_data.get(key) for key in video_data}
+
+        # 修改新字典中的键值对
+        result["cover"] = "https://www.bilibili.com/video/" + result["cover"]
+        result["avid"] = "av" + str(result["avid"])
+
+        video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
+        result["video_type_info"] = video_type_info
+
+        # 仅保留需要的键
+        result = {key: result[key] for key in video_key | {"avid", "cover", "video_type_info"} if
+                  key in result}
+
         return result
 
     def __handleBvMultiResponse(self, video_data) -> dict:
+        url = self.__url
         video_key = {"title", "aid", "pic"}
         multi_video_data = video_data.get('ugc_season').get("sections")[0].get("episodes")
         current_bvid_result = self.__handleBvSingleResponse(video_data)
 
-        url = self.__url
+        # 创建键名映射关系字典
+        key_map = {"aid": "avid", "pic": "cover"}
 
-        def extract_video_info(video):
-            video_info = {key: video.get("arc").get(key) for key in video_key}
+        def handleBvResponse(video):
+            # 创建新字典，用新键名从旧字典中复制旧键的值
+            video_info = {key_map.get(key, key): video.get("arc").get(key) for key in video_key}
+
+            # 添加新键值对
             video_info["bvid"] = video.get("bvid")
-            video_info['aid'] = "av" + str(video_info['aid'])
-            video_info["url.text"] = url + video.get("bvid")
+            video_info["url"] = url + video.get("bvid")
+            video_info["cover"] = "https://www.bilibili.com/video/" + video_info["cover"]
+            video_info["avid"] = "av" + str(video_info["avid"])
+
             return video_info
 
-        multi_video_result = [extract_video_info(video) for video in multi_video_data]
-        video_type = {"is_multi_video": 1, "video_count": len(multi_video_result), "video_type": self.video_id_type}
-        result = {
-            "current_title": current_bvid_result.get('title'),
-            "current_bvid": current_bvid_result.get('bvid'),
-            "current_avid": current_bvid_result.get('aid'),
-            "current_url": current_bvid_result.get("url.text"),
-            "current_pic": current_bvid_result.get("pic"),
-            "video_type": video_type,
-            "data": multi_video_result
-        }
+        multi_video_result = [handleBvResponse(video) for video in multi_video_data]
+        video_type_info = {"is_multi_video": 1, "video_count": len(multi_video_result),
+                           "video_id_type": self.video_id_type}
+
+        result = {**current_bvid_result, "video_list": multi_video_result, "video_type_info": video_type_info}
+
         return result
 
     def __handleEpResponse(self):
         url = self.__url
-        video_key = {"share_copy", "cover", "bvid", "aid"}
+        video_key = {"share_copy", "cover", "bvid", "aid", "link"}
+
+        # 创建键名映射关系字典
+        key_map = {"share_copy": "title", "aid": "avid", "link": "url"}
 
         def handleEpPvResponse(video_data, ep_type):
             video_info = {}
             for video_data_key in video_data:
                 if video_data_key.get("id") == int(self.video_id):
-                    video_info = {key: video_data_key.get(key) for key in video_key}
-            video_info["url"] = url + video_info["bvid"]
-            video_type = {"is_multi_video": 0, "video_count": 1, "video_type": self.video_id_type, "ep_type": ep_type}
-            result = {**video_info, **video_type}
+                    video_info = {key_map.get(key, key): video_data_key.get(key) for key in video_key}
+                    break
+
+            video_info["avid"] = "av" + str(video_info["avid"])
+            video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type,
+                               "type_name": ep_type}
+            result = {**video_info, "video_type_info": video_type_info}
             return result
 
         is_pv_ep = "pv"
@@ -287,7 +303,54 @@ class BilibiliCover(BiliBv):
                 return handleEpPvResponse(pv_video_result, is_pv_ep)
 
     def __handleMdResponse(self):
-        return self.api_response
+        poster_video_key = {"link", "cover", "season_title"}
+
+        # 创建键名映射关系字典
+        poster_key_map = {"link": "url", "cover": "poster_cover", "season_title": "poster_title"}
+
+        video_key = {"link", "cover", "bvid", "aid", "long_title", "title"}
+        video_key_map = {"link": "url", "aid": "avid", "long_title": "title"}
+
+        def handleEpResult(video_info):
+            if video_info:
+                ep_video_info = [{video_key_map.get(key, key): j.get(key) for key in video_key} | {"volume": i + 1} for
+                                 i, j in enumerate(video_info)]
+                return ep_video_info
+            return False
+
+        def handlePvResult(video_info):
+            if video_info:
+                video_info = video_info[0].get("episodes")
+                pv_video_info = [{video_key_map.get(key, key): j.get(key) for key in video_key} | {"pv": i + 1} for i, j
+                                 in enumerate(video_info)]
+                return pv_video_info
+            return False
+
+        response = self.api_response
+        if response.get("result"):
+            video_result = response.get("result").get("media")
+            season_id = video_result.get("season_id")
+            video_response = requests.get(self.__apis.get("ss") + str(season_id)).json().get("result")
+            ep_video_result = video_response.get("episodes")
+            pv_video_result = video_response.get("section")
+
+            poster_video_info = {poster_key_map.get(key, key): video_response.get(key) for key in poster_video_key}
+            video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
+            result = {
+                "data": {
+                    **poster_video_info,
+                    "video_type_info": video_type_info
+                }
+            }
+            if handleEpResult(ep_video_result):
+                result["data"]["eps"] = handleEpResult(ep_video_result)
+                result["data"]["video_type_info"]["states"] = 1
+                if handlePvResult(pv_video_result):
+                    result["data"]["pvs"] = handlePvResult(pv_video_result)
+            elif handlePvResult(pv_video_result):
+                result["data"]["pvs"] = handlePvResult(pv_video_result)
+                result["data"]["video_type_info"]["states"] = 0
+            return result
 
     def __handleSsResponse(self):
         return self.api_response
