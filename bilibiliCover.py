@@ -227,7 +227,7 @@ class BilibiliCover(BiliBv):
 
         # 修改新字典中的键值对
         result["cover"] = "https://www.bilibili.com/video/" + result["cover"]
-        result["avid"] = "av" + str(result["avid"])
+        result["avid"] = f"av{result['avid']}"
         result["url"] = self.__url + result["bvid"]
 
         video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
@@ -256,7 +256,7 @@ class BilibiliCover(BiliBv):
             video_info["bvid"] = video.get("bvid")
             video_info["url"] = url + video.get("bvid")
             video_info["cover"] = "https://www.bilibili.com/video/" + video_info["cover"]
-            video_info["avid"] = "av" + str(video_info["avid"])
+            video_info["avid"] = f"av{video_info['avid']}"
 
             return video_info
 
@@ -281,7 +281,7 @@ class BilibiliCover(BiliBv):
                     video_info = {key_map.get(key, key): video_data_key.get(key) for key in video_key}
                     break
 
-            video_info["avid"] = "av" + str(video_info["avid"])
+            video_info["avid"] = f"av{video_info['avid']}"
             video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type,
                                "type_name": ep_type}
             result = {**video_info, "video_type_info": video_type_info}
@@ -355,23 +355,31 @@ class BilibiliCover(BiliBv):
             return result
 
     def __handleSsResponse(self):
-        video_key = {"link", "cover", "season_title"}
+
+        video_key = {"share_copy", "cover", "bvid", "aid", "share_url"}
 
         # 创建键名映射关系字典
-        key_map = {"link": "url", "season_title": "title"}
+        key_map = {"share_copy": "title", "aid": "avid", "share_url": "url"}
+
+        def handleSsResult(video_data):
+            result = {key_map.get(key, key): value for key, value in video_data.items() if key in video_key}
+            result["avid"] = f"av{result['avid']}"
+            video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
+            result['video_type_info'] = video_type_info
+            return result
 
         response = self.api_response
-        if response.get("result"):
-            video_result = response.get("result")
-            video_info = {key_map.get(key, key): video_result.get(key) for key in video_key}
-            video_type_info = {"is_multi_video": 0, "video_id_type": self.video_id_type}
-            result = {
-                "data": {
-                    **video_info,
-                    "video_type_info": video_type_info
-                }
-            }
-            return result
+
+        episodes = response.get("result").get("episodes")
+        sections = response.get("result").get("section")
+
+        for episode in episodes:
+            if episode.get("id") == response.get("result").get("new_ep").get("id"):
+                return handleSsResult(episode)
+
+        for section in sections:
+            for episode in section.get("episodes"):
+                return handleSsResult(episode)
 
     def cover(self):
         return self.handleResponse()

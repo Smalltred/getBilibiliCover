@@ -36,11 +36,11 @@ def test_get():
 
 @timer
 def test_all():
-    for i in bv_file:
-        test = BilibiliCover(i)
-        print(test.cover())
-        print(test.video_id)
-        print('--------------------------')
+    # for i in bv_file:
+    #     test = BilibiliCover(i)
+    #     print(test.cover())
+    #     print(test.video_id)
+    #     print('--------------------------')
     # for i in av_file:
     #     test = BilibiliCover(i)
     #     print(test.cover())
@@ -54,13 +54,12 @@ def test_all():
     # for i in ss_file:
     #     test = BilibiliCover(i)
     #     print(test.cover())
-    #     print(test.video_id)
     #     print('--------------------------')
-    # for i in md_file:
-    #     test = BilibiliCover(i)
-    #     print(test.cover())
-    #     print(test.video_id)
-    #     print('--------------------------')
+    for i in md_file:
+        test = BilibiliCover(i)
+        print(test.cover())
+        print(test.video_id)
+        print('--------------------------')
 
 
 if __name__ == '__main__':
