@@ -27,10 +27,17 @@ def timer(func):
 
 
 @timer
-def test_get(str):
-        test = BilibiliCover(str)
-        print(test.cover())
-        print('--------------------------')
+def test_get_str(string):
+    test = BilibiliCover(string)
+    print(test.cover())
+    print('--------------------------')
+
+
+@timer
+def test_get_url():
+    test = BilibiliCover("https://www.bilibili.com/video/BV1Z54y1b7mE")
+    print(test.cover())
+    print('--------------------------')
 
 
 @timer
@@ -40,27 +47,28 @@ def test_all():
         print(test.cover())
         print(test.video_id)
         print('--------------------------')
-    # for i in av_file:
-    #     test = BilibiliCover(i)
-    #     print(test.cover())
-    #     print(test.video_id)
-    #     print('--------------------------')
-    # for i in ep_file:
-    #     test = BilibiliCover(i)
-    #     print(test.cover())
-    #     print(test.video_id)
-    #     print('--------------------------')
-    # for i in ss_file:
-    #     test = BilibiliCover(i)
-    #     print(test.cover())
-    #     print('--------------------------')
-    # for i in md_file:
-    #     test = BilibiliCover(i)
-    #     print(test.cover())
-    #     print(test.video_id)
-    #     print('--------------------------')
+    for i in av_file:
+        test = BilibiliCover(i)
+        print(test.cover())
+        print(test.video_id)
+        print('--------------------------')
+    for i in ep_file:
+        test = BilibiliCover(i)
+        print(test.cover())
+        print(test.video_id)
+        print('--------------------------')
+    for i in ss_file:
+        test = BilibiliCover(i)
+        print(test.cover())
+        print('--------------------------')
+    for i in md_file:
+        test = BilibiliCover(i)
+        print(test.cover())
+        print(test.video_id)
+        print('--------------------------')
 
 
 if __name__ == '__main__':
-    test_get("https://i2.hdslb.com/bfs/archive/79b6933cbc49ffe3c853e4ce42eb1e25f6223311.jpg@672w_378h_1c_!web-home-common-cover.avif")
-    # test_all()
+    # test_get_str(
+        # "https://i2.hdslb.com/bfs/archive/79b6933cbc49ffe3c853e4ce42eb1e25f6223311.jpg@672w_378h_1c_!web-home-common-cover.avif")
+    test_all()
