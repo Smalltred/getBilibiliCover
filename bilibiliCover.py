@@ -228,12 +228,13 @@ class BilibiliCover(BiliBv):
         # 修改新字典中的键值对
         result["cover"] = "https://www.bilibili.com/video/" + result["cover"]
         result["avid"] = "av" + str(result["avid"])
+        result["url"] = self.__url + result["bvid"]
 
         video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
         result["video_type_info"] = video_type_info
 
         # 仅保留需要的键
-        result = {key: result[key] for key in video_key | {"avid", "cover", "video_type_info"} if
+        result = {key: result[key] for key in video_key | {"avid", "cover", "video_type_info", "url"} if
                   key in result}
 
         return result
@@ -247,7 +248,7 @@ class BilibiliCover(BiliBv):
         # 创建键名映射关系字典
         key_map = {"aid": "avid", "pic": "cover"}
 
-        def handleBvResponse(video):
+        def handleBvResult(video):
             # 创建新字典，用新键名从旧字典中复制旧键的值
             video_info = {key_map.get(key, key): video.get("arc").get(key) for key in video_key}
 
@@ -259,22 +260,21 @@ class BilibiliCover(BiliBv):
 
             return video_info
 
-        multi_video_result = [handleBvResponse(video) for video in multi_video_data]
+        multi_video_result = [handleBvResult(video) for video in multi_video_data]
         video_type_info = {"is_multi_video": 1, "video_count": len(multi_video_result),
                            "video_id_type": self.video_id_type}
 
-        result = {**current_bvid_result, "video_list": multi_video_result, "video_type_info": video_type_info}
+        result = {"data": {**current_bvid_result, "video_list": multi_video_result, "video_type_info": video_type_info}}
 
         return result
 
     def __handleEpResponse(self):
-        url = self.__url
         video_key = {"share_copy", "cover", "bvid", "aid", "link"}
 
         # 创建键名映射关系字典
         key_map = {"share_copy": "title", "aid": "avid", "link": "url"}
 
-        def handleEpPvResponse(video_data, ep_type):
+        def handleEpPvResult(video_data, ep_type):
             video_info = {}
             for video_data_key in video_data:
                 if video_data_key.get("id") == int(self.video_id):
@@ -292,15 +292,17 @@ class BilibiliCover(BiliBv):
         if response.get("result"):
             video_result = response.get("result")
             ep_video_result = video_result.get("episodes")
-            pv_video_result = video_result.get("section")[0].get("episodes")
+            pv_video_result = video_result.get("section")
+            if pv_video_result:
+                pv_video_result = pv_video_result[0].get("episodes")
             for ep_video_result_key in ep_video_result:
                 if ep_video_result_key.get("id") == int(self.video_id):
                     is_pv_ep = "ep"
                     break
             if is_pv_ep == "ep":
-                return handleEpPvResponse(ep_video_result, is_pv_ep)
+                return handleEpPvResult(ep_video_result, is_pv_ep)
             else:
-                return handleEpPvResponse(pv_video_result, is_pv_ep)
+                return handleEpPvResult(pv_video_result, is_pv_ep)
 
     def __handleMdResponse(self):
         poster_video_key = {"link", "cover", "season_title"}
@@ -353,7 +355,23 @@ class BilibiliCover(BiliBv):
             return result
 
     def __handleSsResponse(self):
-        return self.api_response
+        video_key = {"link", "cover", "season_title"}
+
+        # 创建键名映射关系字典
+        key_map = {"link": "url", "season_title": "title"}
+
+        response = self.api_response
+        if response.get("result"):
+            video_result = response.get("result")
+            video_info = {key_map.get(key, key): video_result.get(key) for key in video_key}
+            video_type_info = {"is_multi_video": 0, "video_id_type": self.video_id_type}
+            result = {
+                "data": {
+                    **video_info,
+                    "video_type_info": video_type_info
+                }
+            }
+            return result
 
     def cover(self):
         return self.handleResponse()

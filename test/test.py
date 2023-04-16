@@ -13,6 +13,7 @@ bv_file = open("bv.text", "r", encoding="utf-8").readlines()
 av_file = open("av.text", "r", encoding="utf-8").readlines()
 ep_file = open("ep.text", "r", encoding="utf-8").readlines()
 md_file = open("md.text", "r", encoding="utf-8").readlines()
+ss_file = open("ss.text", "r", encoding="utf-8").readlines()
 
 
 def timer(func):
@@ -25,16 +26,9 @@ def timer(func):
     return wrapper
 
 
-def regexEp(string):
-    regex = re.compile(r"(ep.*?)\d+", re.I)
-    ep_id = regex.search(string)
-    if ep_id:
-        return ep_id.group(0)[2:]
-
-
 @timer
 def test_get():
-    for i in bv_file:
+    for i in md_file:
         test = BilibiliCover(i)
         print(test.cover())
         print('--------------------------')
@@ -47,20 +41,28 @@ def test_all():
         print(test.cover())
         print(test.video_id)
         print('--------------------------')
-    for i in ep_file:
-        test = BilibiliCover(i)
-        print(test.cover())
-        print(test.video_id)
-        print('--------------------------')
-    for i in md_file:
-        test = BilibiliCover(i)
-        print(test.cover())
-        print(test.video_id)
-        print('--------------------------')
+    # for i in av_file:
+    #     test = BilibiliCover(i)
+    #     print(test.cover())
+    #     print(test.video_id)
+    #     print('--------------------------')
+    # for i in ep_file:
+    #     test = BilibiliCover(i)
+    #     print(test.cover())
+    #     print(test.video_id)
+    #     print('--------------------------')
+    # for i in ss_file:
+    #     test = BilibiliCover(i)
+    #     print(test.cover())
+    #     print(test.video_id)
+    #     print('--------------------------')
+    # for i in md_file:
+    #     test = BilibiliCover(i)
+    #     print(test.cover())
+    #     print(test.video_id)
+    #     print('--------------------------')
 
 
 if __name__ == '__main__':
-    test_get()
-    # test_all()
-    # 直接把分析结果打印到控制台
-    pass
+    # test_get()
+    test_all()
