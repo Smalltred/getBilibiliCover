@@ -185,7 +185,10 @@ class BilibiliCover(BiliBv):
                 response = requests.get(api + video_id).json()
                 if response['code'] == 0:
                     return response
-            return self.__response_error
+                else:
+                    return self.__response_error
+            else:
+                return self.__regex_error
         except requests.exceptions.RequestException:
             return self.__requests_error
 
