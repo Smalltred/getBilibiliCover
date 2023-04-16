@@ -225,8 +225,6 @@ class BilibiliCover(BiliBv):
         # 创建新字典，用新键名从旧字典中复制旧键的值
         result = {key_map.get(key, key): video_data.get(key) for key in video_data}
 
-        # 修改新字典中的键值对
-        result["cover"] = "https://www.bilibili.com/video/" + result["cover"]
         result["avid"] = f"av{result['avid']}"
         result["url"] = self.__url + result["bvid"]
 
@@ -264,7 +262,7 @@ class BilibiliCover(BiliBv):
         video_type_info = {"is_multi_video": 1, "video_count": len(multi_video_result),
                            "video_id_type": self.video_id_type}
 
-        result = {"data": {**current_bvid_result, "video_list": multi_video_result, "video_type_info": video_type_info}}
+        result = {**current_bvid_result, "video_list": multi_video_result, "video_type_info": video_type_info}
 
         return result
 
@@ -308,7 +306,7 @@ class BilibiliCover(BiliBv):
         poster_video_key = {"link", "cover", "season_title"}
 
         # 创建键名映射关系字典
-        poster_key_map = {"link": "url", "cover": "poster_cover", "season_title": "poster_title"}
+        poster_key_map = {"link": "poster_url", "cover": "poster_cover", "season_title": "poster_title"}
 
         video_key = {"link", "cover", "bvid", "aid", "long_title", "title"}
         video_key_map = {"link": "url", "aid": "avid", "long_title": "title"}
@@ -339,19 +337,17 @@ class BilibiliCover(BiliBv):
             poster_video_info = {poster_key_map.get(key, key): video_response.get(key) for key in poster_video_key}
             video_type_info = {"is_multi_video": 0, "video_count": 1, "video_id_type": self.video_id_type}
             result = {
-                "data": {
                     **poster_video_info,
                     "video_type_info": video_type_info
                 }
-            }
             if handleEpResult(ep_video_result):
-                result["data"]["eps"] = handleEpResult(ep_video_result)
-                result["data"]["video_type_info"]["states"] = 1
+                result["eps"] = handleEpResult(ep_video_result)
+                result["video_type_info"]["states"] = 1
                 if handlePvResult(pv_video_result):
-                    result["data"]["pvs"] = handlePvResult(pv_video_result)
+                    result["pvs"] = handlePvResult(pv_video_result)
             elif handlePvResult(pv_video_result):
-                result["data"]["pvs"] = handlePvResult(pv_video_result)
-                result["data"]["video_type_info"]["states"] = 0
+                result["pvs"] = handlePvResult(pv_video_result)
+                result["video_type_info"]["states"] = 0
             return result
 
     def __handleSsResponse(self):
