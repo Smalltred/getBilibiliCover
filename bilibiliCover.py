@@ -317,8 +317,7 @@ class BilibiliCover(BiliBv):
 
         def handleEpResult(video_info):
             if video_info:
-                ep_video_info = [{video_key_map.get(key, key): j.get(key) for key in video_key} | {"volume": i + 1} for
-                                 i, j in enumerate(video_info)]
+                ep_video_info = [{video_key_map.get(key, key): j.get(key) for key in video_key} for j in video_info]
                 return ep_video_info
             return False
 
