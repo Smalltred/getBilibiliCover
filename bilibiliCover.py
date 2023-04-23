@@ -257,7 +257,6 @@ class BilibiliCover(BiliBv):
             # 添加新键值对
             video_info["bvid"] = video.get("bvid")
             video_info["url"] = url + video.get("bvid")
-            video_info["cover"] = "https://www.bilibili.com/video/" + video_info["cover"]
             video_info["avid"] = f"av{video_info['avid']}"
 
             return video_info
