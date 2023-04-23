@@ -312,8 +312,8 @@ class BilibiliCover(BiliBv):
         # 创建键名映射关系字典
         poster_key_map = {"link": "poster_url", "cover": "poster_cover", "season_title": "poster_title"}
 
-        video_key = {"link", "cover", "bvid", "aid", "long_title", "title"}
-        video_key_map = {"link": "url", "aid": "avid", "long_title": "title"}
+        video_key = {"link", "cover", "bvid", "aid", "share_copy", "title"}
+        video_key_map = {"link": "url", "aid": "avid", "share_copy": "title"}
 
         def handleEpResult(video_info):
             if video_info:
